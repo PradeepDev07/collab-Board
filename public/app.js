@@ -128,6 +128,8 @@
 
     // actions
     el.addEventListener('click', (e) => {
+      // If we just finished a drag via touch, suppress the synthetic click
+      if (el._suppressNextClick) { el._suppressNextClick = false; return; }
       const btn = e.target.closest('button');
       if (!btn) return;
       const action = btn.dataset.action;
@@ -194,55 +196,90 @@
     });
   });
 
-  // Simple touch drag-and-drop
+  // Improved touch drag-and-drop with thresholds and long-press
   function enableTouchDrag(cardEl, task) {
-    let startX, startY, dragging = false, ghost;
+    let startX, startY, startTime, isPointerDown = false, isDragging = false, ghost, longPressTimer;
+
+    const DRAG_DIST = 10; // px movement threshold
+    const LONG_PRESS_MS = 180; // hold duration before drag can start
 
     const onTouchStart = (e) => {
+      if (e.touches.length > 1) return; // ignore multi-touch
+      isPointerDown = true; isDragging = false;
       const t = e.touches[0];
-      startX = t.clientX; startY = t.clientY; dragging = true;
+      startX = t.clientX; startY = t.clientY; startTime = Date.now();
+
+      // set long-press to arm dragging; do not create ghost yet
+      clearTimeout(longPressTimer);
+      longPressTimer = setTimeout(() => {
+        if (!isPointerDown || isDragging) return;
+        beginDrag(t.clientX, t.clientY);
+      }, LONG_PRESS_MS);
+    };
+
+    const onTouchMove = (e) => {
+      if (!isPointerDown) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      const dist = Math.hypot(dx, dy);
+
+      // If moved far enough before long-press fired, start drag
+      if (!isDragging && dist > DRAG_DIST && Date.now() - startTime >= LONG_PRESS_MS) {
+        beginDrag(t.clientX, t.clientY);
+      }
+
+      if (!isDragging) return; // allow normal scroll/tap if not dragging
+
+      moveGhost(t.clientX, t.clientY);
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      $$('.column-body').forEach(c => c.classList.toggle('dragover', c === el || c.contains(el)));
+      e.preventDefault(); // prevent page scroll while dragging
+    };
+
+    const onTouchEnd = (e) => {
+      clearTimeout(longPressTimer);
+      if (!isPointerDown) return;
+
+      // If we were dragging, drop; otherwise treat as tap (let click handler run)
+      if (isDragging) {
+        if (ghost) ghost.remove();
+        cardEl.classList.remove('dragging');
+        const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+        const x = t ? t.clientX : startX, y = t ? t.clientY : startY;
+        const el = document.elementFromPoint(x, y);
+        const colBody = el && (el.closest && el.closest('.column-body')) || (el && el.classList && el.classList.contains('column-body') ? el : null);
+        $$('.column-body').forEach(c => c.classList.remove('dragover'));
+        if (colBody) {
+          const to = colBody.id.replace('col-', '');
+          send({ type: 'move_task', taskId: task.id, to });
+        }
+        // suppress the synthetic click following touchend after a drag
+        cardEl._suppressNextClick = true;
+      }
+
+      isPointerDown = false; isDragging = false; ghost = null;
+    };
+
+    function beginDrag(x, y) {
+      isDragging = true;
       ghost = cardEl.cloneNode(true);
       ghost.style.position = 'fixed';
       ghost.style.pointerEvents = 'none';
-      ghost.style.opacity = '0.8';
+      ghost.style.opacity = '0.85';
+      ghost.style.transform = 'scale(1.02)';
+      ghost.style.transition = 'transform .08s ease';
       ghost.style.zIndex = '1000';
       ghost.style.width = cardEl.getBoundingClientRect().width + 'px';
       document.body.appendChild(ghost);
       cardEl.classList.add('dragging');
-      moveGhost(t.clientX, t.clientY);
-    };
-
-    const onTouchMove = (e) => {
-      if (!dragging) return;
-      const t = e.touches[0];
-      moveGhost(t.clientX, t.clientY);
-      // highlight column under finger
-      const el = document.elementFromPoint(t.clientX, t.clientY);
-      $$('.column-body').forEach(c => c.classList.toggle('dragover', c === el || c.contains(el)));
-      e.preventDefault();
-    };
-
-    const onTouchEnd = (e) => {
-      if (!dragging) return;
-      dragging = false;
-      if (ghost) ghost.remove();
-      cardEl.classList.remove('dragging');
-
-      // determine drop target
-      const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
-      const x = t ? t.clientX : startX, y = t ? t.clientY : startY;
-      const el = document.elementFromPoint(x, y);
-      const colBody = el && (el.closest && el.closest('.column-body')) || (el && el.classList && el.classList.contains('column-body') ? el : null);
-      $$('.column-body').forEach(c => c.classList.remove('dragover'));
-      if (colBody) {
-        const to = colBody.id.replace('col-', '');
-        send({ type: 'move_task', taskId: task.id, to });
-      }
-    };
+      moveGhost(x, y);
+    }
 
     function moveGhost(x, y) {
-      const offset = 12; // keep finger above ghost
-      ghost.style.left = (x - ghost.offsetWidth/2) + 'px';
+      const offset = 14; // keep finger above ghost
+      if (!ghost) return;
+      ghost.style.left = (x - (ghost.offsetWidth / 2)) + 'px';
       ghost.style.top = (y - offset) + 'px';
     }
 
