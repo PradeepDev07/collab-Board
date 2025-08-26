@@ -3,8 +3,8 @@
 *****/
 
 :root {
-  --bg: #001832;
-  --bg-soft: #001b66;
+  --bg: #0b1220;
+  --bg-soft: #0f162a;
   --surface: #111a2e;
   --surface-2: #152038;
   --text: #e5e7eb;
@@ -28,7 +28,7 @@ body {
               var(--bg);
   color: var(--text);
 }
-#app { height: 100%; display: flex; flex-direction: column; }
+#app { height: 100vh; display: flex; flex-direction: column; }
 
 /***** Header *****/
 .app-header {
@@ -59,14 +59,14 @@ body {
 .layout {
   flex: 1; display: grid; gap: 1px; padding: 16px;
   grid-template-columns: 1fr; /* mobile */
-  
+  width: 100%; max-width: 1200px; margin-inline: auto;
 }
 .sidebar, .board { background: transparent; }
 
 /* Place board first on mobile */
 .board { order: 1; }
 .sidebar { order: 2; }
-.layout{}
+
 /***** Sidebar *****/
 .sidebar {
   background: var(--surface);
@@ -122,7 +122,6 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
   overflow-y: auto; }
 .column-body.dragover { outline: 2px dashed var(--brand); background: rgba(59,130,246,0.08); }
 
-
 /***** Cards *****/
 .card {
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
@@ -142,7 +141,7 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
 }
 .card-actions button:hover { filter: brightness(1.08); }
 
-.sidebar{}
+
 .activity-container{
   min-height: 90px; max-height:90px; overflow-y: auto;
 }
@@ -152,17 +151,15 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
 
 /***** Desktop/tablet breakpoints *****/
 @media (min-width: 720px) {
-  .layout { grid-template-columns: 280px 1fr; gap: 16px; }
+  .layout { grid-template-columns: 1fr 2fr; gap: 16px; height: 100vh; }
   .board {
-    grid-auto-flow: initial; grid-auto-columns: initial; overflow: visible;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    
+    display: flex;
+    flex-direction: column;
+     order:0;
   }
   .sidebar { min-height: 100vh; max-height: calc(100vh - 60px); }
-  .board{
-    display: flex; flex-direction: column; 
-    order:2;
-
-  }
+  
   .activity-container{
   min-height: 500px; max-height:500px; overflow-y: auto;
 }
@@ -172,9 +169,10 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
   .app-header h1 { font-size: 20px; }
   .layout { gap: 24px; padding: 24px; grid-template-columns: 500px 1fr; max-width: 1400px; min-height: calc(100vh - 60px); ;
   }
-  .board { gap: 20px; }
+  .board { gap: 20px; order:2; }
   .activity-container{
   min-height: 600px; max-height:600px; overflow-y: auto;
+
 }
 }
 
@@ -203,7 +201,7 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
 /* ===== CUSTOM SCI-FI MODALS ===== */
 .modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000;
-  background: rgba(0, 24, 50, 0.9); backdrop-filter: blur(10px);
+  background: rgba(11, 18, 32, 0.9); backdrop-filter: blur(10px);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; visibility: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -244,7 +242,7 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
 .modal-content::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--brand), #10b981, var(--brand));
+  background: linear-gradient(90deg, var(--brand), var(--success), var(--brand));
   animation: modal-glow 2s ease-in-out infinite alternate;
 }
 
