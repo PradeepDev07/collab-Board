@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Real-Time Collaboration Board</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1>Collab Board</h1>
+      <div class="user-controls">
+        <input id="usernameInput" type="text" placeholder="Enter your username" />
+        <button id="joinBtn">Join</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <h2>Online</h2>
+        <ul id="onlineUsers"></ul>
+        <h2>Create Task</h2>
+        <form id="newTaskForm">
+          <input id="taskTitle" type="text" placeholder="Task title" required size="30" />
+          <textarea id="taskDesc" placeholder="Description (optional)" rows="3" cols="30" ></textarea>
+          <select id="taskStatus">
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+          <button type="submit">Add Task</button>
+        </form>
+        <h2>Activity</h2>
+        <div class="activity-container"><ul id="activityLog" class="activity"></ul></div>
+        
+      </aside>
+
+      <section class="board">
+        <div class="column" data-status="todo">
+          <h2>To Do</h2>
+          <div class="column-body" id="col-todo"></div>
+        </div>
+        <div class="column" data-status="in_progress">
+          <h2>In Progress</h2>
+          <div class="column-body" id="col-in_progress"></div>
+        </div>
+        <div class="column" data-status="done">
+          <h2>Done</h2>
+          <div class="column-body" id="col-done"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
+

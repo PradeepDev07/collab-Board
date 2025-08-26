@@ -1,0 +1,16 @@
+{
+  "name": "collab-manager",
+  "version": "1.0.0",
+  "description": "A Trello-like Kanban board with real-time sync via WebSockets, built with vanilla JS on the frontend and a Node.js server using the `ws` library.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
