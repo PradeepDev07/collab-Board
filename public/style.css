@@ -3,8 +3,8 @@
 *****/
 
 :root {
-  --bg: #0b1220;
-  --bg-soft: #0f162a;
+  --bg: #001832;
+  --bg-soft: #001b66;
   --surface: #111a2e;
   --surface-2: #152038;
   --text: #e5e7eb;
@@ -57,9 +57,9 @@ body {
 
 /***** Layout *****/
 .layout {
-  flex: 1; display: grid; gap: 1px; padding: 16px;
+  flex: 1; display: grid; gap: 16px; padding: 16px;
   grid-template-columns: 1fr; /* mobile */
-  width: 100%; max-width: 1200px; margin-inline: auto;
+  width: 100%; max-width: 1280px; margin-inline: auto;
 }
 .sidebar, .board { background: transparent; }
 
@@ -108,7 +108,6 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
   display: flex; flex-direction: column;
   box-shadow: var(--shadow);
   min-height: 270px;
-  max-height: 270px;
 }
 .column h2 {
   position: sticky; top: 0; z-index: 1;
@@ -122,17 +121,7 @@ form#newTaskForm button:hover { filter: brightness(1.05); }
   overflow-y: auto; }
 .column-body.dragover { outline: 2px dashed var(--brand); background: rgba(59,130,246,0.08); }
 
-.taskDesc{
-  resize: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  word-break: break-all;
-  overflow-wrap: break-word;
-  min-height: 3.5em;
-  max-height: 3.5em;
-}
+
 /***** Cards *****/
 .card {
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
