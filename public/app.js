@@ -134,13 +134,15 @@
       if (!btn) return;
       const action = btn.dataset.action;
       if (action === 'delete') {
-        if (confirm('Delete this task?')) send({ type: 'delete_task', taskId: task.id });
+        showConfirm('Delete this task?', 'This action cannot be undone.').then(confirmed => {
+          if (confirmed) send({ type: 'delete_task', taskId: task.id });
+        });
       } else if (action === 'edit') {
-        const title = prompt('Title', task.title);
-        if (title === null) return;
-        const description = prompt('Description', task.description || '');
-        const assignedTo = prompt('Assign to (optional username)', task.assignedTo || '');
-        send({ type: 'edit_task', taskId: task.id, title, description, assignedTo: assignedTo || null });
+        showEditDialog(task).then(result => {
+          if (result) {
+            send({ type: 'edit_task', taskId: task.id, ...result });
+          }
+        });
       }
     });
 
@@ -306,6 +308,146 @@
   // Utils
   function escapeHtml(s) {
     return String(s).replace(/[&<>"]|'/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // Custom Sci-Fi Modal System
+  function createModal(content, className = '') {
+    const overlay = document.createElement('div');
+    overlay.className = `modal-overlay ${className}`;
+    overlay.innerHTML = `
+      <div class="modal-container">
+        <div class="modal-content">
+          ${content}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      overlay.classList.add('modal-show');
+    });
+
+    return overlay;
+  }
+
+  function removeModal(overlay) {
+    overlay.classList.remove('modal-show');
+    overlay.classList.add('modal-hide');
+    setTimeout(() => {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }, 300);
+  }
+
+  function showConfirm(title, message) {
+    return new Promise((resolve) => {
+      const content = `
+        <div class="modal-header">
+          <h3>${escapeHtml(title)}</h3>
+        </div>
+        <div class="modal-body">
+          <p>${escapeHtml(message)}</p>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary" data-action="cancel">Cancel</button>
+          <button class="modal-btn modal-btn-danger" data-action="confirm">Delete</button>
+        </div>
+      `;
+
+      const modal = createModal(content, 'modal-confirm');
+
+      modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+          resolve(false);
+          removeModal(modal);
+        }
+
+        const action = e.target.dataset.action;
+        if (action === 'confirm') {
+          resolve(true);
+          removeModal(modal);
+        } else if (action === 'cancel') {
+          resolve(false);
+          removeModal(modal);
+        }
+      });
+
+      // Focus the confirm button
+      setTimeout(() => {
+        const confirmBtn = modal.querySelector('[data-action="confirm"]');
+        if (confirmBtn) confirmBtn.focus();
+      }, 100);
+    });
+  }
+
+  function showEditDialog(task) {
+    return new Promise((resolve) => {
+      const content = `
+        <div class="modal-header">
+          <h3>Edit Task</h3>
+        </div>
+        <div class="modal-body">
+          <form class="modal-form">
+            <div class="form-group">
+              <label for="edit-title">Title</label>
+              <input type="text" id="edit-title" value="${escapeHtml(task.title)}" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-desc">Description</label>
+              <textarea id="edit-desc" rows="3">${escapeHtml(task.description || '')}</textarea>
+            </div>
+            <div class="form-group">
+              <label for="edit-assigned">Assign to</label>
+              <input type="text" id="edit-assigned" value="${escapeHtml(task.assignedTo || '')}" placeholder="Username (optional)">
+            </div>
+          </form>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary" data-action="cancel">Cancel</button>
+          <button class="modal-btn modal-btn-primary" data-action="save">Save Changes</button>
+        </div>
+      `;
+
+      const modal = createModal(content, 'modal-edit');
+
+      modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+          resolve(null);
+          removeModal(modal);
+        }
+
+        const action = e.target.dataset.action;
+        if (action === 'save') {
+          const title = modal.querySelector('#edit-title').value.trim();
+          const description = modal.querySelector('#edit-desc').value;
+          const assignedTo = modal.querySelector('#edit-assigned').value.trim() || null;
+
+          if (title) {
+            resolve({ title, description, assignedTo });
+            removeModal(modal);
+          }
+        } else if (action === 'cancel') {
+          resolve(null);
+          removeModal(modal);
+        }
+      });
+
+      // Handle form submission
+      const form = modal.querySelector('.modal-form');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        modal.querySelector('[data-action="save"]').click();
+      });
+
+      // Focus the title input
+      setTimeout(() => {
+        const titleInput = modal.querySelector('#edit-title');
+        if (titleInput) {
+          titleInput.focus();
+          titleInput.select();
+        }
+      }, 100);
+    });
   }
 
   // Start
