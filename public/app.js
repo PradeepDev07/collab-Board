@@ -3,9 +3,9 @@
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
 
   const wsUrl = () => {
-    const { protocol, hostname, port } = window.location;
+    const { protocol, host } = window.location; // host includes :port if present
     const wsProto = protocol === 'https:' ? 'wss' : 'ws';
-    return `${wsProto}://${hostname}:${port}`;
+    return `${wsProto}://${host}`;
   };
 
   let ws = null;
